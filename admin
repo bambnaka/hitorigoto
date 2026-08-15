@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理画面 | 今日のひとりごと</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Z017HF17EP"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-Z017HF17EP');</script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:#0D1F2D;color:#E8F4F8;min-height:100vh;}
+.tape{height:5px;background:repeating-linear-gradient(90deg,#3A9DBB 0,#3A9DBB 20px,#A8DCF0 20px,#A8DCF0 40px);}
+header{background:#0D1F2D;border-bottom:1px solid #1A3A4A;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.site-title{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:1.2rem;color:#E8F4F8;}
+.site-title span{color:#3A9DBB;}
+.back-link{font-size:0.75rem;color:#5A8A9A;text-decoration:none;font-family:'Share Tech Mono',monospace;}
+.back-link:hover{color:#3A9DBB;}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);}
+.login-box{background:#1A3A4A;border:1px solid #2A5A6A;border-radius:12px;padding:2rem;width:300px;}
+.login-title{font-family:'Zen Kaku Gothic New',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.2rem;color:#E8F4F8;text-align:center;}
+.login-input{width:100%;padding:0.6rem 0.8rem;background:#0D1F2D;border:1px solid #2A5A6A;border-radius:8px;color:#E8F4F8;font-size:0.9rem;font-family:'Noto Sans JP',sans-serif;margin-bottom:0.8rem;}
+.login-input:focus{outline:none;border-color:#3A9DBB;}
+.login-btn{width:100%;padding:0.7rem;background:#3A9DBB;color:white;border:none;border-radius:8px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;}
+.login-btn:hover{background:#2A7D9B;}
+.login-err{font-size:0.75rem;color:#E87A7A;margin-top:0.5rem;text-align:center;display:none;}
+#admin-panel{display:none;max-width:960px;margin:0 auto;padding:1.5rem 1.2rem 4rem;}
+.section-label{font-family:'Share Tech Mono',monospace;font-size:0.8rem;font-weight:700;color:#5A8A9A;letter-spacing:0.1em;margin-bottom:0.8rem;margin-top:1.8rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.8rem;margin-bottom:1rem;}
+.stat-card{background:#1A3A4A;border:1px solid #2A5A6A;border-radius:10px;padding:1rem 1.2rem;}
+.stat-num{font-family:'Share Tech Mono',monospace;font-size:1.8rem;color:#3A9DBB;display:block;line-height:1;}
+.stat-label{font-size:0.68rem;color:#5A8A9A;display:block;margin-top:0.3rem;}
+.stat-card.qr .stat-num{color:#A8DCF0;}
+.stat-card.rate .stat-num{color:#7FD4A0;font-size:1.5rem;}
+.stat-card.rate{border-color:#2A5A4A;}
+
+/* 参加率・リピート率カード */
+.rate-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1rem;}
+.rate-card{background:#1A3A4A;border:1px solid #2A5A4A;border-radius:10px;padding:1.2rem;}
+.rate-title{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:#5A8A9A;margin-bottom:0.5rem;}
+.rate-num{font-family:'Zen Kaku Gothic New',sans-serif;font-size:2.5rem;font-weight:900;color:#7FD4A0;line-height:1;}
+.rate-unit{font-size:0.8rem;color:#5A8A9A;margin-left:0.2rem;}
+.rate-formula{font-size:0.65rem;color:#3A5A6A;margin-top:0.4rem;font-family:'Share Tech Mono',monospace;line-height:1.5;}
+
+.qr-url-box{background:#1A3A4A;border:1px solid #2A5A6A;border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;}
+.qr-url-label{font-size:0.68rem;color:#5A8A9A;margin-bottom:0.4rem;font-family:'Share Tech Mono',monospace;}
+.qr-url{font-size:0.75rem;color:#A8DCF0;font-family:'Share Tech Mono',monospace;word-break:break-all;line-height:1.6;}
+.timeline-wrap{background:#1A3A4A;border:1px solid #2A5A6A;border-radius:10px;margin-bottom:1rem;overflow:hidden;}
+.timeline-header{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.9rem;border-bottom:1px solid #2A5A6A;}
+.timeline-header-label{font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:#5A8A9A;}
+.view-toggle{display:flex;gap:0.4rem;}
+.toggle-btn{font-size:0.65rem;padding:2px 8px;border-radius:6px;cursor:pointer;border:1px solid #2A5A6A;background:none;color:#5A8A9A;font-family:'Share Tech Mono',monospace;}
+.toggle-btn.active{background:#3A9DBB;border-color:#3A9DBB;color:white;}
+.hour-chart{padding:0.8rem 1rem;}
+.hour-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:4px;}
+.hour-label{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:#3A5A6A;min-width:40px;}
+.hour-bar-wrap{flex:1;background:#0D1F2D;border-radius:2px;height:14px;overflow:hidden;}
+.hour-bar{height:100%;background:#3A9DBB;border-radius:2px;}
+.hour-count{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:#A8DCF0;min-width:24px;text-align:right;}
+.log-list{max-height:300px;overflow-y:auto;}
+.log-item{display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.9rem;border-bottom:1px solid #1A3A4A;}
+.log-item:last-child{border-bottom:none;}
+.log-time{font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:#3A9DBB;min-width:130px;}
+.log-id{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:#3A5A6A;}
+.log-dot{width:6px;height:6px;border-radius:50%;background:#3A9DBB;flex-shrink:0;}
+.badge-r2{font-size:0.6rem;background:#1A3A5A;color:#A8DCF0;border:1px solid #3A9DBB;padding:1px 6px;border-radius:4px;}
+.badge-r3{font-size:0.6rem;background:#0A2A4A;color:#C8F0FF;border:1px solid #A8DCF0;padding:1px 6px;border-radius:4px;}
+.access-table-wrap{background:#1A3A4A;border:1px solid #2A5A6A;border-radius:10px;margin-bottom:1rem;overflow:hidden;}
+.access-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+.access-table th{background:#0D1F2D;color:#5A8A9A;font-family:'Share Tech Mono',monospace;font-size:0.68rem;font-weight:700;letter-spacing:0.05em;padding:0.5rem 0.8rem;text-align:left;border-bottom:1px solid #2A5A6A;}
+.access-table td{padding:0.5rem 0.8rem;border-bottom:1px solid #1A3A4A;color:#A8D0D8;font-family:'Share Tech Mono',monospace;vertical-align:middle;}
+.access-table tr:last-child td{border-bottom:none;}
+.access-table tr:hover td{background:#162D3A;}
+.count-bar-wrap{display:flex;align-items:center;gap:0.5rem;}
+.count-bar{height:6px;background:#3A9DBB;border-radius:3px;min-width:4px;}
+.count-num{color:#A8DCF0;font-weight:700;min-width:28px;}
+.post-card{background:#1A3A4A;border:1px solid #2A5A6A;border-radius:10px;margin-bottom:0.7rem;}
+.post-card-meta{display:flex;align-items:center;flex-wrap:wrap;gap:0.4rem;padding:0.6rem 1rem;border-bottom:1px solid #2A5A6A;}
+.post-time{font-size:0.65rem;color:#3A5A6A;font-family:'Share Tech Mono',monospace;margin-left:auto;}
+.helpful-count{font-size:0.68rem;color:#3A9DBB;font-family:'Share Tech Mono',monospace;}
+.post-card-body{padding:0.7rem 1rem;}
+.post-text{font-size:0.85rem;color:#A8D0D8;line-height:1.7;white-space:pre-wrap;}
+.post-card-foot{display:flex;justify-content:flex-end;padding:0.5rem 1rem;border-top:1px solid #2A5A6A;}
+.del-btn{font-size:0.72rem;color:#E87A7A;border:1px solid #7A3A3A;padding:3px 12px;border-radius:6px;cursor:pointer;background:none;font-family:'Noto Sans JP',sans-serif;}
+.del-btn:hover{background:#3A1A1A;}
+.loading{text-align:center;padding:2rem;color:#3A5A6A;font-size:0.82rem;}
+.empty{text-align:center;padding:2rem;color:#3A5A6A;font-size:0.82rem;}
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#1A3A4A;border:1px solid #3A9DBB;border-radius:12px;padding:1.5rem;width:300px;text-align:center;}
+.modal p{font-size:0.85rem;color:#A8D0D8;margin-bottom:1.2rem;line-height:1.7;}
+.modal-btns{display:flex;gap:0.5rem;}
+.modal-cancel{flex:1;padding:0.6rem;background:none;border:1px solid #2A5A6A;border-radius:8px;color:#5A8A9A;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;}
+.modal-delete{flex:1;padding:0.6rem;background:#C94A1A;border:none;border-radius:8px;color:white;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:0.85rem;font-weight:700;}
+.modal-delete:hover{background:#A33A10;}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#E8F4F8;color:#0D1F2D;padding:0.6rem 1.4rem;border-radius:20px;font-size:0.82rem;z-index:200;transition:transform .28s;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="tape"></div>
+<header>
+  <div class="site-title">今日の<span>ひとりごと</span> — 管理画面</div>
+  <a class="back-link" href="index.html">← 掲示板に戻る</a>
+</header>
+
+<div id="login-screen"><div class="login-box">
+  <div class="login-title">🔐 管理者ログイン</div>
+  <input class="login-input" id="pw-input" type="password" placeholder="パスワード" onkeydown="if(event.key==='Enter')login()">
+  <button class="login-btn" onclick="login()">ログイン</button>
+  <div class="login-err" id="login-err">パスワードが違います</div>
+</div></div>
+
+<div id="admin-panel">
+  <div class="section-label">// 投稿統計</div>
+  <div class="stats-grid">
+    <div class="stat-card"><span class="stat-num" id="s-total">—</span><span class="stat-label">総投稿数</span></div>
+    <div class="stat-card"><span class="stat-num" id="s-likes">—</span><span class="stat-label">総「♡」数</span></div>
+    <div class="stat-card"><span class="stat-num" id="s-today">—</span><span class="stat-label">今日の投稿</span></div>
+  </div>
+
+  <div class="section-label">// QRコード読み取り統計</div>
+  <div class="stats-grid">
+    <div class="stat-card qr"><span class="stat-num" id="qr-total">—</span><span class="stat-label">QR総読み取り数</span></div>
+    <div class="stat-card qr"><span class="stat-num" id="qr-unique">—</span><span class="stat-label">ユニーク訪問者数</span></div>
+    <div class="stat-card qr"><span class="stat-num" id="qr-repeat2">—</span><span class="stat-label">2回以上読んだ人</span></div>
+    <div class="stat-card qr"><span class="stat-num" id="qr-repeat3">—</span><span class="stat-label">3回以上読んだ人</span></div>
+  </div>
+
+  <div class="section-label">// 参加率・リピート率</div>
+  <div class="rate-grid">
+    <div class="rate-card">
+      <div class="rate-title">参加率</div>
+      <div><span class="rate-num" id="r-participation">—</span><span class="rate-unit">%</span></div>
+      <div class="rate-formula" id="r-participation-formula">投稿数 ÷ QRユニーク訪問者数 × 100</div>
+    </div>
+    <div class="rate-card">
+      <div class="rate-title">リピート率</div>
+      <div><span class="rate-num" id="r-repeat">—</span><span class="rate-unit">%</span></div>
+      <div class="rate-formula" id="r-repeat-formula">2回以上投稿した人 ÷ 投稿した人 × 100</div>
+    </div>
+  </div>
+
+  <div class="qr-url-box">
+    <div class="qr-url-label">▍ QRコード用URL</div>
+    <div class="qr-url">https://bambnaka.github.io/hitorigoto/?utm_source=qr&utm_medium=monitor&utm_campaign=hitorigoto</div>
+  </div>
+
+  <div class="section-label">// 時系列ログ</div>
+  <div class="timeline-wrap">
+    <div class="timeline-header">
+      <span class="timeline-header-label">QR読み取り履歴</span>
+      <div class="view-toggle">
+        <button class="toggle-btn active" onclick="switchView('hour',this)">時間帯別</button>
+        <button class="toggle-btn" onclick="switchView('log',this)">時系列一覧</button>
+      </div>
+    </div>
+    <div id="view-hour"><div class="hour-chart" id="hour-chart"><div class="empty">データ読み込み中...</div></div></div>
+    <div id="view-log" style="display:none"><div class="log-list" id="log-list"></div></div>
+  </div>
+
+  <div class="section-label">// 訪問者別 読み取り回数</div>
+  <div class="access-table-wrap">
+    <table class="access-table">
+      <thead><tr><th>#</th><th>訪問者ID（末尾8文字）</th><th>読み取り回数</th><th>最終アクセス</th></tr></thead>
+      <tbody id="access-tbody"><tr><td colspan="4" style="text-align:center;color:#3A5A6A;padding:1rem;">読み込み中...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="section-label">// 投稿一覧</div>
+  <div id="admin-posts"><div class="loading">読み込み中...</div></div>
+</div>
+
+<div class="modal-bg" id="modal"><div class="modal">
+  <p>この投稿を削除しますか？<br>この操作は取り消せません。</p>
+  <div class="modal-btns">
+    <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+    <button class="modal-delete" onclick="confirmDelete()">削除する</button>
+  </div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://bujdylzpyefppgytjjru.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amR5bHpweWVmcHBneXRqanJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MjQzMDksImV4cCI6MjA5NjUwMDMwOX0.kiFqqtg5WBtKTv3J13cMW6lN7o3Q-JuVLDtwUDvIwp8';
+const H={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
+const ADMIN_PASS='sarugamori39';
+let deleteTargetId=null;
+
+function login(){
+  const val=document.getElementById('pw-input').value;
+  if(val===ADMIN_PASS){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    loadAll();
+  } else {
+    document.getElementById('login-err').style.display='block';
+  }
+}
+
+function switchView(v,btn){
+  document.getElementById('view-hour').style.display=v==='hour'?'block':'none';
+  document.getElementById('view-log').style.display=v==='log'?'block':'none';
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function loadAll(){
+  let posts=[];
+  let qrData=[];
+
+  // 投稿データ（visitor_id含む）
+  try{
+    const res=await fetch(SUPABASE_URL+'/rest/v1/hitorigoto?order=created_at.desc',{headers:H});
+    posts=await res.json();
+    renderStats(posts);
+    renderPosts(posts);
+  }catch(e){document.getElementById('admin-posts').innerHTML='<div class="empty">読み込みに失敗しました。</div>';}
+
+  // QRアクセスデータ
+  try{
+    const res=await fetch(SUPABASE_URL+'/rest/v1/qr_access?site=eq.hitorigoto&order=accessed_at.desc',{headers:H});
+    qrData=await res.json();
+
+    const total=qrData.length;
+    const visitorMap={};
+    qrData.forEach(d=>{
+      if(!visitorMap[d.visitor_id]){visitorMap[d.visitor_id]={count:0,last:d.accessed_at};}
+      visitorMap[d.visitor_id].count++;
+    });
+    const visitors=Object.entries(visitorMap).sort((a,b)=>b[1].count-a[1].count);
+    const unique=visitors.length;
+    const r2=visitors.filter(([,v])=>v.count>=2).length;
+    const r3=visitors.filter(([,v])=>v.count>=3).length;
+    document.getElementById('qr-total').textContent=total;
+    document.getElementById('qr-unique').textContent=unique;
+    document.getElementById('qr-repeat2').textContent=r2;
+    document.getElementById('qr-repeat3').textContent=r3;
+
+    // 参加率・リピート率計算
+    calcRates(posts, unique);
+
+    // 時間帯別グラフ
+    const hourCounts=Array(24).fill(0);
+    qrData.forEach(d=>{ hourCounts[new Date(d.accessed_at).getHours()]++; });
+    const maxH=Math.max(...hourCounts,1);
+    const hourChart=document.getElementById('hour-chart');
+    if(!qrData.length){
+      hourChart.innerHTML='<div style="text-align:center;color:#3A5A6A;padding:1rem;font-size:0.8rem;">まだデータがありません</div>';
+    } else {
+      hourChart.innerHTML=hourCounts.map((c,h)=>`
+        <div class="hour-row">
+          <span class="hour-label">${String(h).padStart(2,'0')}:00</span>
+          <div class="hour-bar-wrap"><div class="hour-bar" style="width:${Math.round((c/maxH)*100)}%"></div></div>
+          <span class="hour-count">${c>0?c:''}</span>
+        </div>`).join('');
+    }
+
+    // 時系列一覧
+    const logList=document.getElementById('log-list');
+    if(!qrData.length){
+      logList.innerHTML='<div style="text-align:center;color:#3A5A6A;padding:1rem;font-size:0.8rem;">まだデータがありません</div>';
+    } else {
+      logList.innerHTML=qrData.map(d=>{
+        const t=new Date(d.accessed_at).toLocaleString('ja-JP',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const cnt=visitorMap[d.visitor_id]?.count||1;
+        const badge=cnt>=3?'<span class="badge-r3">3回以上</span>':cnt>=2?'<span class="badge-r2">2回以上</span>':'';
+        return`<div class="log-item"><div class="log-dot"></div><span class="log-time">${t}</span><span class="log-id">ID:${d.visitor_id.slice(-8)}</span>${badge}</div>`;
+      }).join('');
+    }
+
+    // 訪問者別テーブル
+    const maxCount=visitors[0]?.[1]?.count||1;
+    const tbody=document.getElementById('access-tbody');
+    if(!visitors.length){
+      tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#3A5A6A;padding:1rem;">まだQR読み取りがありません</td></tr>';
+    } else {
+      tbody.innerHTML=visitors.map(([id,v],i)=>{
+        const lastTime=new Date(v.last).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        const barWidth=Math.round((v.count/maxCount)*120);
+        const badge=v.count>=3?'<span class="badge-r3">3回以上</span>':v.count>=2?'<span class="badge-r2">2回以上</span>':'';
+        return`<tr>
+          <td style="color:#3A5A6A">${i+1}</td>
+          <td><code>${id.slice(-8)}</code> ${badge}</td>
+          <td><div class="count-bar-wrap"><div class="count-bar" style="width:${barWidth}px"></div><span class="count-num">${v.count}回</span></div></td>
+          <td><span style="font-size:0.65rem;color:#3A5A6A">${lastTime}</span></td>
+        </tr>`;
+      }).join('');
+    }
+  }catch(e){}
+}
+
+function calcRates(posts, qrUnique){
+  // 参加率 = 投稿数 ÷ QRユニーク訪問者数 × 100
+  const postCount=posts.length;
+  if(qrUnique>0){
+    const participation=Math.round((postCount/qrUnique)*100);
+    document.getElementById('r-participation').textContent=participation;
+    document.getElementById('r-participation-formula').textContent=
+      `${postCount}件の投稿 ÷ ${qrUnique}人の訪問者 × 100`;
+  } else {
+    document.getElementById('r-participation').textContent='—';
+  }
+
+  // リピート率 = 2回以上投稿した visitor_id の数 ÷ 投稿した visitor_id のユニーク数 × 100
+  const postVisitorMap={};
+  posts.forEach(p=>{
+    if(!p.visitor_id)return;
+    postVisitorMap[p.visitor_id]=(postVisitorMap[p.visitor_id]||0)+1;
+  });
+  const postVisitors=Object.values(postVisitorMap);
+  const totalPosters=postVisitors.length;
+  const repeatPosters=postVisitors.filter(c=>c>=2).length;
+
+  if(totalPosters>0){
+    const repeatRate=Math.round((repeatPosters/totalPosters)*100);
+    document.getElementById('r-repeat').textContent=repeatRate;
+    document.getElementById('r-repeat-formula').textContent=
+      `${repeatPosters}人が2回以上投稿 ÷ ${totalPosters}人が投稿 × 100`;
+  } else {
+    document.getElementById('r-repeat').textContent='—';
+    document.getElementById('r-repeat-formula').textContent=
+      'まだ投稿データがありません（visitor_id付きの投稿が必要）';
+  }
+}
+
+function renderStats(posts){
+  document.getElementById('s-total').textContent=posts.length;
+  document.getElementById('s-likes').textContent=posts.reduce((s,p)=>s+(p.helpful||0),0);
+  const today=new Date().toDateString();
+  document.getElementById('s-today').textContent=posts.filter(p=>new Date(p.created_at).toDateString()===today).length;
+}
+
+function renderPosts(posts){
+  const el=document.getElementById('admin-posts');
+  if(!posts.length){el.innerHTML='<div class="empty">投稿がありません。</div>';return;}
+  el.innerHTML=posts.map(p=>{
+    const t=new Date(p.created_at).toLocaleString('ja-JP',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return`<div class="post-card" id="card-${p.id}">
+      <div class="post-card-meta">
+        <span class="helpful-count">♡ ${p.helpful}</span>
+        <span class="post-time">${t}</span>
+      </div>
+      <div class="post-card-body"><p class="post-text">${esc(p.episode)}</p></div>
+      <div class="post-card-foot"><button class="del-btn" onclick="askDelete(${p.id})">削除</button></div>
+    </div>`;
+  }).join('');
+}
+
+function askDelete(id){deleteTargetId=id;document.getElementById('modal').classList.add('show');}
+function closeModal(){deleteTargetId=null;document.getElementById('modal').classList.remove('show');}
+async function confirmDelete(){
+  if(!deleteTargetId)return;
+  const id=deleteTargetId;closeModal();
+  try{
+    const res=await fetch(SUPABASE_URL+'/rest/v1/hitorigoto?id=eq.'+id,{method:'DELETE',headers:H});
+    if(res.ok){toast('🗑 投稿を削除しました');await loadAll();}
+    else{toast('⚠ 削除に失敗しました（'+res.status+'）');}
+  }catch(e){toast('⚠ 通信エラーが発生しました');}
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+</script>
+</body>
+</html>
