@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日のひとりごと — モニター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{font-family:'Noto Sans JP',sans-serif;background:#EBF6FB;color:#1A3A4A;display:grid;grid-template-columns:1fr 420px;height:100vh;}
+
+/* 左：タイムライン */
+.left{display:flex;flex-direction:column;height:100vh;overflow:hidden;padding:2.5rem 2rem 2rem 3rem;}
+.site-header{margin-bottom:2rem;flex-shrink:0;}
+.site-title{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:2.8rem;color:#1A3A4A;letter-spacing:-0.02em;line-height:1;}
+.site-sub{font-size:0.75rem;color:#7AAABB;letter-spacing:0.15em;margin-top:0.3rem;}
+.stat-row{display:flex;align-items:center;gap:1.5rem;margin-top:1rem;}
+.stat-item{display:flex;align-items:baseline;gap:0.4rem;}
+.stat-num{font-family:'Zen Kaku Gothic New',sans-serif;font-size:2rem;font-weight:900;color:#3A9DBB;}
+.stat-label{font-size:0.72rem;color:#7AAABB;}
+
+.feed{flex:1;overflow:hidden;position:relative;}
+.feed-inner{display:flex;flex-direction:column;gap:1rem;position:absolute;bottom:0;left:0;right:0;transition:transform 0.6s ease;}
+
+.card{background:white;border-radius:12px;padding:1.2rem 1.5rem;box-shadow:0 2px 12px rgba(58,157,187,0.1);border-left:4px solid #A8DCF0;animation:slideIn 0.5s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.card-time{font-size:0.65rem;color:#7AAABB;margin-bottom:0.4rem;letter-spacing:0.05em;}
+.card-text{font-size:1rem;color:#1A3A4A;line-height:1.7;}
+.card.new{border-left-color:#3A9DBB;background:#F0FAFE;}
+
+/* 右：QR */
+.right{background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem;border-left:1px solid #D0EAF5;gap:1.5rem;}
+.qr-label{font-family:'Zen Kaku Gothic New',sans-serif;font-size:1.1rem;font-weight:700;color:#1A3A4A;text-align:center;line-height:1.5;}
+.qr-sub{font-size:0.72rem;color:#7AAABB;text-align:center;line-height:1.8;}
+.qr-box{width:240px;height:240px;background:#EBF6FB;border-radius:12px;display:flex;align-items:center;justify-content:center;border:2px solid #A8DCF0;}
+.qr-box img{width:220px;height:220px;}
+.qr-url{font-size:0.65rem;color:#7AAABB;text-align:center;word-break:break-all;line-height:1.6;max-width:240px;}
+.pulse{width:12px;height:12px;border-radius:50%;background:#3A9DBB;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}}
+.live-row{display:flex;align-items:center;gap:0.5rem;font-size:0.72rem;color:#3A9DBB;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="left">
+  <div class="site-header">
+    <div class="site-title">今日のひとりごと</div>
+    <div class="site-sub">// TODAY'S MONOLOGUE //</div>
+    <div class="stat-row">
+      <div class="stat-item">
+        <span class="stat-num" id="s-count">0</span>
+        <span class="stat-label">件の投稿</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" id="s-people">0</span>
+        <span class="stat-label">人が参加</span>
+      </div>
+      <div class="live-row"><div class="pulse"></div>LIVE</div>
+    </div>
+  </div>
+  <div class="feed"><div class="feed-inner" id="feed"></div></div>
+</div>
+
+<div class="right">
+  <div class="qr-label">QRコードを読み取って<br>ひとりごとを投稿しよう</div>
+  <div class="qr-box">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://bambnaka.github.io/hitorigoto/?utm_source=qr%26utm_medium=monitor%26utm_campaign=hitorigoto&color=1A3A4A&bgcolor=EBF6FB" alt="QR">
+  </div>
+  <div class="qr-url">bambnaka.github.io/hitorigoto/</div>
+  <div class="qr-sub">スマホでQRを読み取るだけで<br>すぐに投稿できます</div>
+</div>
+
+<script>
+const SUPABASE_URL='https://bujdylzpyefppgytjjru.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amR5bHpweWVmcHBneXRqanJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MjQzMDksImV4cCI6MjA5NjUwMDMwOX0.kiFqqtg5WBtKTv3J13cMW6lN7o3Q-JuVLDtwUDvIwp8';
+const H={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY};
+
+let lastId=0;
+let allPosts=[];
+const MAX_DISPLAY=6;
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+async function fetchPosts(){
+  try{
+    const res=await fetch(SUPABASE_URL+'/rest/v1/hitorigoto?order=created_at.desc&limit=50',{headers:H});
+    const data=await res.json();
+    if(!Array.isArray(data))return;
+
+    // 参加人数＝投稿した visitor_id のユニーク数（visitor_id がない場合は投稿数で代替）
+    // 今回は投稿数をそのまま参加人数として表示
+    const total=data.length;
+    document.getElementById('s-count').textContent=total;
+    document.getElementById('s-people').textContent=total;
+
+    // 新着があれば先頭に追加
+    const newPosts=data.filter(p=>p.id>lastId);
+    if(newPosts.length>0){
+      lastId=data[0].id;
+      allPosts=[...newPosts,...allPosts].slice(0,MAX_DISPLAY);
+      renderFeed();
+    } else if(allPosts.length===0 && data.length>0){
+      lastId=data[0].id;
+      allPosts=data.slice(0,MAX_DISPLAY);
+      renderFeed();
+    }
+  }catch(e){}
+}
+
+function renderFeed(){
+  const feed=document.getElementById('feed');
+  feed.innerHTML=allPosts.map((p,i)=>{
+    const t=new Date(p.created_at).toLocaleString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const isNew=i===0 && allPosts.length>1?'new':'';
+    return`<div class="card ${isNew}"><div class="card-time">${t}</div><div class="card-text">${esc(p.episode)}</div></div>`;
+  }).join('');
+}
+
+fetchPosts();
+setInterval(fetchPosts,3000);
+</script>
+</body>
+</html>
